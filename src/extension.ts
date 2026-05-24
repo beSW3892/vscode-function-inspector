@@ -1,16 +1,17 @@
 import * as vscode from 'vscode';
 
-const output =
-    vscode.window.createOutputChannel(
-        "FuncInfo"
-    );
-
-class FunctionItem extends vscode.TreeItem {
-
+class FunctionItem
+extends vscode.TreeItem
+{
     constructor(
-        public readonly symbol:
+        readonly symbol:
             vscode.DocumentSymbol
-    ) {
+    )
+    {
+        super(
+            symbol.name,
+            vscode.TreeItemCollapsibleState.None
+        );
 
         const start =
             symbol.range.start.line + 1;
@@ -18,24 +19,13 @@ class FunctionItem extends vscode.TreeItem {
         const end =
             symbol.range.end.line + 1;
 
-        const count =
-            end - start + 1;
-
-        super(
-            symbol.name,
-            vscode.TreeItemCollapsibleState.None
-        );
-
-        this.contextValue =
-            "functionItem";
-
         this.description =
-            `L${start}-${end} (${count} lines)`;
+            `L${start}-${end}`;
 
         this.command = {
-            command:'funcInfo.jumpTo',
+            command:'funcInfo.jump',
             title:'Jump',
-            arguments:[this]
+            arguments:[symbol]
         };
     }
 }
@@ -43,50 +33,33 @@ class FunctionItem extends vscode.TreeItem {
 class FunctionProvider
 implements vscode.TreeDataProvider<FunctionItem>
 {
-    private _onDidChangeTreeData =
+    private refreshEmitter =
         new vscode.EventEmitter<void>();
 
     readonly onDidChangeTreeData =
-        this._onDidChangeTreeData.event;
+        this.refreshEmitter.event;
 
-    refresh() {
-
-        this._onDidChangeTreeData.fire();
-
+    refresh()
+    {
+        this.refreshEmitter.fire();
     }
 
     getTreeItem(
         item: FunctionItem
-    ) {
-
+    )
+    {
         return item;
-
     }
 
-    async getChildren() {
-
-        output.appendLine(
-            "GET CHILDREN CALLED"
-        );
-
+    async getChildren()
+    {
         const editor =
-    vscode.window.visibleTextEditors.find(
-        e =>
-            e.document.uri.scheme === 'file'
-    );
+            vscode.window.activeTextEditor;
 
-        if (!editor) {
-
-            output.appendLine(
-                "NO ACTIVE EDITOR"
-            );
-
+        if(!editor)
+        {
             return [];
         }
-
-        output.appendLine(
-            `FILE: ${editor.document.fileName}`
-        );
 
         const symbols =
             await vscode.commands.executeCommand<
@@ -96,68 +69,19 @@ implements vscode.TreeDataProvider<FunctionItem>
                 editor.document.uri
             );
 
-        output.appendLine(
-            "RAW SYMBOLS:"
-        );
-
-        output.appendLine(
-            JSON.stringify(
-                symbols,
-                null,
-                2
-            )
-        );
-
-        output.show();
-
-        if (!symbols) {
-
-            return [];
-
-        }
-
-        function flatten(
-            items:
-                vscode.DocumentSymbol[]
-        )
-        :
-        vscode.DocumentSymbol[]
+        if(!symbols)
         {
-
-            let result:
-                vscode.DocumentSymbol[] = [];
-
-            for(const s of items)
-            {
-                result.push(s);
-
-                if(
-                    s.children.length > 0
-                )
-                {
-                    result.push(
-                        ...flatten(
-                            s.children
-                        )
-                    );
-                }
-            }
-
-            return result;
+            return [];
         }
 
-        const flat =
-            flatten(symbols);
-
-        return flat
+        return symbols
             .filter(
                 s =>
-
-                s.kind ===
-                    vscode.SymbolKind.Function ||
-
-                s.kind ===
-                    vscode.SymbolKind.Method
+                    s.kind ===
+                        vscode.SymbolKind.Function
+                    ||
+                    s.kind ===
+                        vscode.SymbolKind.Method
             )
             .map(
                 s =>
@@ -171,10 +95,6 @@ export function activate(
         vscode.ExtensionContext
 )
 {
-    output.appendLine(
-        "FUNCINFO ACTIVATED"
-    );
-
     const provider =
         new FunctionProvider();
 
@@ -184,91 +104,29 @@ export function activate(
             provider
         );
 
-    vscode.window
-        .onDidChangeActiveTextEditor(
-            () => provider.refresh()
-        );
-
-    vscode.workspace
-        .onDidSaveTextDocument(
-            () => provider.refresh()
-        );
-
     context.subscriptions.push(
-		vscode.commands.registerCommand(
-			'funcInfo.copyFunction',
-			async (
-				item: FunctionItem
-			) =>
-			{
-				const editor =
-					vscode.window.activeTextEditor;
-
-				if(!editor)
-					return;
-
-				const text =
-					editor.document.getText(
-						item.symbol.range
-					);
-
-				await vscode.env.clipboard.writeText(
-					text
-				);
-
-				vscode.window
-					.showInformationMessage(
-						`${item.symbol.name} copied`
-					);
-			}
-		),
-		vscode.commands.registerCommand(
-			'funcInfo.selectFunction',
-			(
-				item: FunctionItem
-			) =>
-			{
-				const editor =
-					vscode.window.activeTextEditor;
-
-				if(!editor)
-					return;
-
-				editor.selection =
-					new vscode.Selection(
-						item.symbol.range.start,
-						item.symbol.range.end
-					);
-
-				editor.revealRange(
-					item.symbol.range
-				);
-			}
-		),
 
         vscode.commands.registerCommand(
             'funcInfo.showFunctions',
-            () => {
-
+            async () =>
+            {
                 provider.refresh();
 
-                vscode.commands.executeCommand(
-                    'workbench.view.extension.funcInfo'
+                await vscode.commands.executeCommand(
+                    'workbench.view.extension.funcInfoSidebar'
                 );
-
-                output.show();
             }
         ),
 
         vscode.commands.registerCommand(
-            'funcInfo.jumpTo',
+            'funcInfo.jump',
             (
-                item: FunctionItem
+                symbol:
+                    vscode.DocumentSymbol
             ) =>
             {
                 const editor =
-                    vscode.window
-                        .activeTextEditor;
+                    vscode.window.activeTextEditor;
 
                 if(!editor)
                 {
@@ -277,12 +135,12 @@ export function activate(
 
                 editor.selection =
                     new vscode.Selection(
-                        item.symbol.selectionRange.start,
-                        item.symbol.selectionRange.start
+                        symbol.selectionRange.start,
+                        symbol.selectionRange.start
                     );
 
                 editor.revealRange(
-                    item.symbol.range
+                    symbol.range
                 );
             }
         )

@@ -20,53 +20,31 @@
   "main": "./out/extension.js",
 
   "contributes": {
-    "keybindings":[
-    {
-        "command":"funcInfo.selectFunction",
-        "key":"ctrl+shift+s"
-    },
-    {
-        "command":"funcInfo.copyFunction",
-        "key":"ctrl+shift+c"
-    }
-],
-    "menus": {
-        "view/item/context": [
-            {
-                "when":"view == functionExplorer  && viewItem == functionItem",
-                "command":"funcInfo.selectFunction"
-            },
-            {
-                "when":"view == functionExplorer && viewItem == functionItem",
-                "command":"funcInfo.copyFunction"
-            }
-        ]
-    },
-
-    "commands": [
-  {
-    "command":"funcInfo.showFunctions",
-    "title":"Func-Info"
-  },
-  {
-    "command":"funcInfo.selectFunction",
-    "title":"Select Function"
-  },
-  {
-    "command":"funcInfo.copyFunction",
-    "title":"Copy Function"
-  }
-],
-
-    "views": {
-    "explorer": [
-        {
-            "id":"functionExplorer",
-            "name":"Func Info"
-        }
-    ]
-  }
-
+     "commands": [
+       {
+         "command":"funcInfo.showFunctions",
+         "title":"Func Info"
+       }
+     ],
+ 
+     "viewsContainers": {
+       "activitybar": [
+         {
+           "id":"funcInfoSidebar",
+           "title":"Func Info",
+           "icon":"$(symbol-function)"
+         }
+       ]
+     },
+ 
+     "views": {
+       "funcInfoSidebar": [
+         {
+           "id":"functionExplorer",
+           "name":"Function Info"
+         }
+       ]
+     }
   },
 
   "scripts": {
