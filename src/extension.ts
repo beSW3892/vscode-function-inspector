@@ -5,22 +5,20 @@ extends vscode.TreeItem
 {
     constructor(
         readonly symbol:
-            vscode.DocumentSymbol
+            vscode.DocumentSymbol,
+			readonly expanded:
+            boolean
     )
     {
         super(
             symbol.name,
-            vscode.TreeItemCollapsibleState.None
+            expanded
+                ? vscode.TreeItemCollapsibleState.Expanded
+                : vscode.TreeItemCollapsibleState.None
         );
 
-        const start =
-            symbol.range.start.line + 1;
-
-        const end =
-            symbol.range.end.line + 1;
-
-        this.description =
-            `L${start}-${end}`;
+        this.contextValue =
+            "functionItem";
 
         this.command = {
             command:'funcInfo.jump',
@@ -30,14 +28,38 @@ extends vscode.TreeItem
     }
 }
 
+class DetailItem
+extends vscode.TreeItem
+{
+    constructor(
+        label:string
+    )
+    {
+        super(
+            label,
+            vscode.TreeItemCollapsibleState.None
+        );
+    }
+}
+
 class FunctionProvider
-implements vscode.TreeDataProvider<FunctionItem>
+implements vscode.TreeDataProvider<FunctionItem | DetailItem>
 {
     private refreshEmitter =
         new vscode.EventEmitter<void>();
 
+	private showDetails = true;
+
     readonly onDidChangeTreeData =
         this.refreshEmitter.event;
+
+	toggleDetails()
+	{
+		this.showDetails =
+			!this.showDetails;
+
+		this.refresh();
+	}
 
     refresh()
     {
@@ -45,49 +67,101 @@ implements vscode.TreeDataProvider<FunctionItem>
     }
 
     getTreeItem(
-        item: FunctionItem
-    )
-    {
-        return item;
-    }
+		item:
+			FunctionItem |
+			DetailItem
+	)
+	{
+		return item;
+	}
 
-    async getChildren()
-    {
-        const editor =
-            vscode.window.activeTextEditor;
+	async getChildren(
+		element?:
+			FunctionItem |
+			DetailItem
+	)
+	{
+		//
+		// CHILDREN OF FUNCTION NODE
+		//
+		if(
+			element instanceof FunctionItem
+		)
+		{
+			if(!this.showDetails)
+			{
+				return [];
+			}
 
-        if(!editor)
-        {
-            return [];
-        }
+			const start =
+				element.symbol.range.start.line + 1;
 
-        const symbols =
-            await vscode.commands.executeCommand<
-                vscode.DocumentSymbol[]
-            >(
-                'vscode.executeDocumentSymbolProvider',
-                editor.document.uri
-            );
+			const end =
+				element.symbol.range.end.line + 1;
 
-        if(!symbols)
-        {
-            return [];
-        }
+			const lineCount =
+				end - start + 1;
 
-        return symbols
-            .filter(
-                s =>
-                    s.kind ===
-                        vscode.SymbolKind.Function
-                    ||
-                    s.kind ===
-                        vscode.SymbolKind.Method
-            )
-            .map(
-                s =>
-                    new FunctionItem(s)
-            );
-    }
+			return [
+
+				new DetailItem(
+					`Lines: ${lineCount}`
+				),
+
+				new DetailItem(
+					`Range: ${start}-${end}`
+				),
+
+				new DetailItem(
+					`Comments: TODO`
+				)
+
+			];
+		}
+
+		//
+		// ROOT LEVEL
+		//
+
+		const editor =
+			vscode.window.activeTextEditor;
+
+		if(!editor)
+		{
+			return [];
+		}
+
+		const symbols =
+			await vscode.commands.executeCommand<
+				vscode.DocumentSymbol[]
+			>(
+				'vscode.executeDocumentSymbolProvider',
+				editor.document.uri
+			);
+
+		if(!symbols)
+		{
+			return [];
+		}
+
+		return symbols
+			.filter(
+				s =>
+
+				s.kind ===
+					vscode.SymbolKind.Function ||
+
+				s.kind ===
+					vscode.SymbolKind.Method
+			)
+			.map(
+				s =>
+					new FunctionItem(
+						s,
+						this.showDetails
+					)
+			);
+	}
 }
 
 export function activate(
@@ -105,6 +179,22 @@ export function activate(
         );
 
     context.subscriptions.push(
+
+		vscode.commands.registerCommand(
+			'funcInfo.refresh',
+			() =>
+			{
+				provider.refresh();
+			}
+		),
+
+		vscode.commands.registerCommand(
+			'funcInfo.toggleDetails',
+			() =>
+			{
+				provider.toggleDetails();
+			}
+		),
 
         vscode.commands.registerCommand(
             'funcInfo.showFunctions',

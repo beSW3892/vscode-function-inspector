@@ -20,12 +20,35 @@
   "main": "./out/extension.js",
 
   "contributes": {
-     "commands": [
-       {
-         "command":"funcInfo.showFunctions",
-         "title":"Func Info"
-       }
-     ],
+      "menus": {
+        "view/title": [
+          {
+            "command":"funcInfo.refresh",
+            "when":"view == functionExplorer",
+            "group":"navigation"
+          },
+
+          {
+            "command":"funcInfo.toggleDetails",
+            "when":"view == functionExplorer",
+            "group":"navigation"
+          }
+        ]
+      },
+      "commands": [
+        {
+          "command":"funcInfo.showFunctions",
+          "title":"Func Info"
+        },
+        {
+          "command":"funcInfo.refresh",
+          "title":"Refresh"
+        },
+        {
+          "command":"funcInfo.toggleDetails",
+          "title":"Toggle Details"
+        }
+      ],
  
      "viewsContainers": {
        "activitybar": [
