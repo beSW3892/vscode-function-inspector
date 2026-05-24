@@ -21,6 +21,20 @@
 
   "contributes": {
       "menus": {
+        "view/item/context":[
+        {
+            "command":"funcInfo.copyFunction",
+            "when":"view == functionExplorer && viewItem == functionItem"
+        },
+        {
+            "command":"funcInfo.selectFunction",
+            "when":"view == functionExplorer && viewItem == functionItem"
+        },
+        {
+            "command":"funcInfo.compareFunction",
+            "when":"view == functionExplorer && viewItem == functionItem"
+        }
+        ],
         "view/title": [
           {
             "command":"funcInfo.refresh",
@@ -56,7 +70,8 @@
         },
         {
           "command":"funcInfo.refresh",
-          "title":"Refresh"
+          "title":"Refresh",
+          "icon":"$(refresh)"
         },
         {
           "command":"funcInfo.showFile",
@@ -69,6 +84,18 @@
         {
           "command":"funcInfo.toggleDetails",
           "title":"Toggle Details"
+        },
+        {
+          "command":"funcInfo.copyFunction",
+          "title":"Copy Function"
+        },
+        {
+          "command":"funcInfo.selectFunction",
+          "title":"Select Function"
+        },
+        {
+          "command":"funcInfo.compareFunction",
+          "title":"Compare Function"
         }
       ],
  

@@ -94,6 +94,42 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 
 	private view?:vscode.TreeView<any>;
 
+	private compareBuffer:
+    FunctionItem[] = [];
+
+	private updateStats(
+        symbols:
+            vscode.DocumentSymbol[]
+    )
+    {
+        let count = 0;
+        let lines = 0;
+
+        for(const s of symbols)
+        {
+            if(
+                s.kind ===
+                    vscode.SymbolKind.Function ||
+
+                s.kind ===
+                    vscode.SymbolKind.Method
+            )
+            {
+                count++;
+
+                lines +=
+                    s.range.end.line -
+                    s.range.start.line + 1;
+            }
+        }
+
+        if(this.view)
+        {
+            this.view.description =
+                `${count} funcs • ${lines} lines`;
+        }
+    }
+
     readonly onDidChangeTreeData =
         this.refreshEmitter.event;
 
@@ -113,25 +149,31 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 		this.refresh();
 	}
 
+	addCompare(item:FunctionItem)
+	{
+		this.compareBuffer.push(item);
+
+		if(this.compareBuffer.length < 2)
+		{
+			vscode.window.showInformationMessage(
+				'Select second function.'
+			);
+
+			return;
+		}
+
+		this.compare();
+	}
+
 	setFileMode()
 	{
 		this.scanWorkspace = false;
-		if(this.view)
-		{
-			this.view.description =
-				'Active File Functions';
-		}
 		this.refresh();
 	}
 
 	setFolderMode()
 	{
 		this.scanWorkspace = true;
-		if(this.view)
-		{
-			this.view.description =
-				'Workspace Functions';
-		}
 		this.refresh();
 	}
 
@@ -151,10 +193,57 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 		return item;
 	}
 
+	async compare()
+	{
+		const [a,b] =
+			this.compareBuffer;
+
+		const docA =
+			await vscode.workspace.openTextDocument(
+				a.uri
+			);
+
+		const docB =
+			await vscode.workspace.openTextDocument(
+				b.uri
+			);
+
+		const textA =
+			docA.getText(
+				a.symbol.range
+			);
+
+		const textB =
+			docB.getText(
+				b.symbol.range
+			);
+
+		const left =
+			await vscode.workspace.openTextDocument({
+				content:textA
+			});
+
+		const right =
+			await vscode.workspace.openTextDocument({
+				content:textB
+			});
+
+		vscode.commands.executeCommand(
+			'vscode.diff',
+			left.uri,
+			right.uri,
+			`${a.symbol.name} ↔ ${b.symbol.name}`
+		);
+
+		this.compareBuffer = [];
+	}
+
 	async getChildren(
 		element?:
 			FunctionItem |
-			DetailItem
+			DetailItem	 |
+			ClassItem	 |
+			FileItem	 
 	)
 	{
 		if(element instanceof FileItem)
@@ -207,10 +296,6 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 				new DetailItem(
 					`Range: ${start}-${end}`
 				),
-
-				new DetailItem(
-					`Comments: TODO`
-				)
 
 			];
 		}
@@ -288,6 +373,8 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 			return [];
 		}
 
+		this.updateStats(symbols);
+
 		let results:
 		(
 			FunctionItem |
@@ -351,6 +438,14 @@ export function activate(
 	provider.setView(tree);
 
     context.subscriptions.push(
+
+		vscode.commands.registerCommand(
+			'funcInfo.compareFunction',
+			async (item:FunctionItem)=>
+		{
+			provider.addCompare(item);
+		}),
+
 		vscode.commands.registerCommand(
 			'funcInfo.selectFunction',
 			async (
