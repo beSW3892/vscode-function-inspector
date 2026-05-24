@@ -1,0 +1,83 @@
+{
+  "name": "func-info",
+  "displayName": "Func Info",
+  "description": "",
+  "version": "0.0.1",
+
+  "engines": {
+    "vscode": "^1.120.0"
+  },
+
+  "categories": [
+    "Other"
+  ],
+
+  "activationEvents": [
+    "onCommand:funcInfo.showFunctions",
+    "onView:functionExplorer"
+  ],
+
+  "main": "./out/extension.js",
+
+  "contributes": {
+    "keybindings":[
+    {
+        "command":"funcInfo.selectFunction",
+        "key":"ctrl+shift+s"
+    },
+    {
+        "command":"funcInfo.copyFunction",
+        "key":"ctrl+shift+c"
+    }
+],
+    "menus": {
+        "view/item/context": [
+            {
+                "when":"view == functionExplorer  && viewItem == functionItem",
+                "command":"funcInfo.selectFunction"
+            },
+            {
+                "when":"view == functionExplorer && viewItem == functionItem",
+                "command":"funcInfo.copyFunction"
+            }
+        ]
+    },
+
+    "commands": [
+  {
+    "command":"funcInfo.showFunctions",
+    "title":"Func-Info"
+  },
+  {
+    "command":"funcInfo.selectFunction",
+    "title":"Select Function"
+  },
+  {
+    "command":"funcInfo.copyFunction",
+    "title":"Copy Function"
+  }
+],
+
+    "views": {
+    "explorer": [
+        {
+            "id":"functionExplorer",
+            "name":"Func Info"
+        }
+    ]
+  }
+
+  },
+
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+
+  "devDependencies": {
+    "@types/vscode": "^1.120.0",
+    "@types/node": "22.x",
+    "typescript": "^5.9.3"
+  }
+}
