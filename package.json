@@ -27,13 +27,27 @@
             "when":"view == functionExplorer",
             "group":"navigation"
           },
-
           {
             "command":"funcInfo.toggleDetails",
             "when":"view == functionExplorer",
             "group":"navigation"
           }
-        ]
+        ],
+        "commandPalette": [
+          {
+              "command":"funcInfo.refresh",
+              "when":"false"
+          },
+
+          {
+              "command":"funcInfo.toggleDetails",
+              "when":"false"
+          },
+          {
+              "command":"funcInfo.showFunctions",
+              "when":"false"
+          }
+      ]
       },
       "commands": [
         {
@@ -43,6 +57,14 @@
         {
           "command":"funcInfo.refresh",
           "title":"Refresh"
+        },
+        {
+          "command":"funcInfo.showFile",
+          "title":"FuncInfo:Active File"
+        },
+        {
+          "command":"funcInfo.showFolder",
+          "title":"FuncInfo:Workspace"
         },
         {
           "command":"funcInfo.toggleDetails",
