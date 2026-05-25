@@ -1,6 +1,6 @@
 {
-  "name": "func-info",
-  "displayName": "Func Info",
+  "name": "function-inspector",
+  "displayName": "Function Inspector",
   "description": "",
   "version": "0.0.1",
 
@@ -13,7 +13,7 @@
   ],
 
   "activationEvents": [
-    "onCommand:funcInfo.showFunctions",
+    "onCommand:functionInspector.showFunctions",
     "onView:functionExplorer"
   ],
 
@@ -23,78 +23,73 @@
       "menus": {
         "view/item/context":[
         {
-            "command":"funcInfo.copyFunction",
+            "command":"functionInspector.copyFunction",
             "when":"view == functionExplorer && viewItem == functionItem"
         },
         {
-            "command":"funcInfo.selectFunction",
+            "command":"functionInspector.selectFunction",
             "when":"view == functionExplorer && viewItem == functionItem"
         },
         {
-            "command":"funcInfo.compareFunction",
+            "command":"functionInspector.compareFunction",
             "when":"view == functionExplorer && viewItem == functionItem"
         }
         ],
         "view/title": [
           {
-            "command":"funcInfo.refresh",
-            "when":"view == functionExplorer",
-            "group":"navigation"
-          },
-          {
-            "command":"funcInfo.toggleDetails",
-            "when":"view == functionExplorer",
-            "group":"navigation"
+              "command":"functionInspector.refresh",
+              "when":"view == functionExplorer",
+              "group":"navigation"
           }
         ],
         "commandPalette": [
           {
-              "command":"funcInfo.refresh",
+              "command":"functionInspector.refresh",
               "when":"false"
           },
 
           {
-              "command":"funcInfo.toggleDetails",
+              "command":"functionInspector.toggleDetails",
               "when":"false"
           },
           {
-              "command":"funcInfo.showFunctions",
+              "command":"functionInspector.showFunctions",
               "when":"false"
           }
       ]
       },
       "commands": [
         {
-          "command":"funcInfo.showFunctions",
-          "title":"Func Info"
+          "command":"functionInspector.showFunctions",
+          "title":"Function Inspector"
         },
         {
-          "command":"funcInfo.refresh",
+          "command":"functionInspector.refresh",
           "title":"Refresh",
           "icon":"$(refresh)"
         },
         {
-          "command":"funcInfo.showFile",
-          "title":"FuncInfo:Active File"
+          "command":"functionInspector.showFile",
+          "title":"Function Inspector:Active File"
         },
         {
-          "command":"funcInfo.showFolder",
-          "title":"FuncInfo:Workspace"
+          "command":"functionInspector.showFolder",
+          "title":"Function Inspector:Workspace"
         },
         {
-          "command":"funcInfo.toggleDetails",
+          "command":"functionInspector.toggleDetails",
           "title":"Toggle Details"
         },
         {
-          "command":"funcInfo.copyFunction",
+          "command":"functionInspector.copyFunction",
           "title":"Copy Function"
         },
         {
-          "command":"funcInfo.selectFunction",
+          "command":"functionInspector.selectFunction",
           "title":"Select Function"
         },
         {
-          "command":"funcInfo.compareFunction",
+          "command":"functionInspector.compareFunction",
           "title":"Compare Function"
         }
       ],
@@ -102,18 +97,18 @@
      "viewsContainers": {
        "activitybar": [
          {
-           "id":"funcInfoSidebar",
-           "title":"Func Info",
+           "id":"functionInspectorSidebar",
+           "title":"Function Inspector",
            "icon":"$(symbol-function)"
          }
        ]
      },
  
      "views": {
-       "funcInfoSidebar": [
+       "functionInspectorSidebar": [
          {
            "id":"functionExplorer",
-           "name":"Function Info"
+           "name":"Function Inspector"
          }
        ]
      }
