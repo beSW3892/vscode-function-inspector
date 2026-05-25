@@ -58,15 +58,9 @@ Clicking a file node opens the editor.
 
 ## Sidebar Controls
 
-### Refresh
+### Refresh button
 
-Command:
-
-```txt
-Function Inspector: Refresh
-```
-
-Performs a **hard refresh**.
+Performs a **hard refresh** by click the refresh symbol in the Function Inspector sidebar.
 
 Clears:
 
@@ -219,6 +213,14 @@ Without these extensions:
 * nested symbols may be missing
 
 ---
+## Caching
+
+Function Inspector caches:
+
+* document symbols
+* calculated statistics
+
+Use **Refresh Button** to perform a hard reset when results appear stale.
 
 # Known Issues
 
@@ -240,6 +242,13 @@ Results vary by:
 * parser implementation
 
 ---
+## Large Workspaces
+
+Very large workspaces may experience slower scans.
+
+Workspace mode currently searches supported source files and requests symbol information for discovered files.
+
+Performance depends heavily on language provider performance.
 
 ## Python isort Server Crashes
 
@@ -252,7 +261,7 @@ The isort server crashed 5 times...
 
 This can be caused by the Python environment or formatter extension.
 
-## Nested Functions
+## Missing Functions/Classes
 
 Local functions and nested methods depend on the language provider.
 
@@ -270,7 +279,7 @@ Features:
 
 * Active file explorer
 * Workspace mode
-* Refresh / hard reset
+* Refresh Button
 * Function stats
 * Compare functions
 * Copy function source
