@@ -1,71 +1,279 @@
-# func-info README
+# Function Inspector
 
-This is the README for your extension "func-info". After writing up a brief description, we recommend including the following sections.
+A lightweight VS Code extension for exploring functions, methods, and classes across your active file or entire workspace.
 
-## Features
-
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+Browse code structure, inspect function statistics, jump to implementations, compare functions, and copy source code directly from the sidebar.
 
 ---
 
-## Following extension guidelines
+# Features
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+## Active File Mode
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+Command:
 
-## Working with Markdown
+```txt
+Function Inspector: Active File
+```
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+Shows symbols from the currently open editor.
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+Displays:
 
-## For more information
+* Functions
+* Methods
+* Classes
+* Nested symbols *(language provider dependent)*
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+Includes:
 
-**Enjoy!**
+* Function statistics
+* Line counts
+* Range information
+* Collapse / Expand tree support
+
+---
+
+## Workspace Mode
+
+Command:
+
+```txt
+Function Inspector: Workspace
+```
+
+Scans supported files across the workspace.
+
+Features:
+
+* File grouping
+* File icons *(theme dependent)*
+* Open files directly
+* Browse functions by file
+* Workspace statistics
+
+Clicking a file node opens the editor.
+
+---
+
+## Sidebar Controls
+
+### Refresh
+
+Command:
+
+```txt
+Function Inspector: Refresh
+```
+
+Performs a **hard refresh**.
+
+Clears:
+
+* Symbol cache
+* Statistics cache
+
+Then rebuilds the tree.
+
+Useful when:
+
+* symbols stop updating
+* language servers refresh
+* extensions reload
+* parser output changes
+
+---
+
+### Collapse All
+
+Use the built-in **Collapse All** button in the tree view toolbar.
+
+Quickly collapse the entire explorer tree.
+
+---
+
+## Function Actions
+
+Available from function nodes.
+
+### Select Function
+
+Opens the source file and selects the full function body.
+
+### Copy Function
+
+Copies the full function source to the clipboard.
+
+### Compare Functions
+
+Select **two functions**.
+
+Run:
+
+```txt
+Function Inspector: Compare Functions
+```
+
+Opens a VS Code diff view comparing both implementations.
+
+---
+
+# Command Palette Commands
+
+Only these commands appear directly in the Command Palette:
+
+| Command                               |
+| ------------------------------------- |
+| Function Inspector: Active File       |
+| Function Inspector: Workspace         |
+| ------------------------------------- |
+
+Other actions are available through the explorer UI.
+
+---
+
+# Language Support
+
+Function Inspector relies on:
+
+```ts
+vscode.executeDocumentSymbolProvider
+```
+
+Language support depends on installed symbol providers.
+
+## Supported File Discovery
+
+```txt
+.c
+.cpp
+.cc
+.h
+.hpp
+.cs
+.py
+.js
+.ts
+.jsx
+.tsx
+```
+
+---
+
+## Required Extensions
+
+### JavaScript / TypeScript
+
+Built into VS Code.
+
+No installation required.
+
+---
+
+### Python
+
+Install:
+
+```txt
+Python (Microsoft)
+```
+
+Recommended:
+
+```txt
+Pylance (Microsoft)
+```
+
+---
+
+### C / C++
+
+Install:
+
+```txt
+C/C++ (Microsoft)
+```
+
+---
+
+### C#
+
+Install ONE of:
+
+```txt
+C# Dev Kit (Microsoft)
+```
+
+or
+
+```txt
+C# (OmniSharp)
+```
+
+---
+
+Without these extensions:
+
+* no symbols may appear
+* workspace results may be empty
+* nested symbols may be missing
+
+---
+
+# Known Issues
+
+## Symbol Availability
+
+Languages expose symbol trees differently.
+
+Examples:
+
+* namespaces
+* nested classes
+* local functions
+* language-specific parser behavior
+
+Results vary by:
+
+* language server
+* extension version
+* parser implementation
+
+---
+
+## Python isort Server Crashes
+
+Some Python setups may display errors like:
+
+```txt
+isort client: couldn't create connection to server
+The isort server crashed 5 times...
+```
+
+This can be caused by the Python environment or formatter extension.
+
+## Nested Functions
+
+Local functions and nested methods depend on the language provider.
+
+Some languages may omit nested symbols.
+
+---
+
+# Release Notes
+
+## 1.0.0
+
+Initial release.
+
+Features:
+
+* Active file explorer
+* Workspace mode
+* Refresh / hard reset
+* Function stats
+* Compare functions
+* Copy function source
+* Function selection
+* File opening
+* Tree navigation
