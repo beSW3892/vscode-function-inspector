@@ -1,8 +1,12 @@
 {
   "name": "function-inspector",
   "displayName": "Function Inspector",
-  "description": "",
-  "version": "0.0.1",
+  "description": "Browse, inspect, compare, and navigate functions across your active file or workspace.",
+  "version": "1.0.0",
+  "repository": {
+        "type": "git",
+        "url": "https://github.com/beSW3892/vscode-function-explorer.git"
+  },
 
   "engines": {
     "vscode": "^1.120.0"
@@ -10,11 +14,6 @@
 
   "categories": [
     "Other"
-  ],
-
-  "activationEvents": [
-    "onCommand:functionInspector.showFunctions",
-    "onView:functionExplorer"
   ],
 
   "main": "./out/extension.js",
