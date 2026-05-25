@@ -33,6 +33,9 @@ extends vscode.TreeItem
             vscode.TreeItemCollapsibleState.Collapsed
         );
 
+		this.resourceUri = uri;
+		this.iconPath = vscode.ThemeIcon.File;
+
         this.contextValue =
             "fileItem";
 		
@@ -100,6 +103,11 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 	private statsCache = new Map<string, {count:number, lines:number}>();
 
 	private view?:vscode.TreeView<any>;
+
+	readonly onDidChangeTreeData = this.refreshEmitter.event;
+
+	private symbolCache =
+    	new Map<string,vscode.DocumentSymbol[]>();
 
 	private collectStats(
 		symbols:vscode.DocumentSymbol[]
@@ -187,7 +195,7 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 		if(this.view)
 		{
 			this.view.message =
-				`Workspace: ${totalFuncs} funcs • ${totalLines} lines`;
+				`${totalFuncs} funcs • ${totalLines} lines`;
 		}
 	}
 
@@ -212,9 +220,6 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 			s.kind === vscode.SymbolKind.Method
 		);
 	}
-
-	private symbolCache =
-    	new Map<string,vscode.DocumentSymbol[]>();
 
 	private async getSymbols(
 		uri:vscode.Uri
@@ -278,9 +283,6 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 		this.symbolCache.delete(key);
 		this.statsCache.delete(key);
 	}
-
-    readonly onDidChangeTreeData =
-        this.refreshEmitter.event;
 
 	setView(
 		view:
@@ -363,7 +365,10 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 			'vscode.diff',
 			left.uri,
 			right.uri,
-			`${a.symbol.name} ↔ ${b.symbol.name}`
+			`${a.symbol.name} ↔ ${b.symbol.name}`,
+			{
+				preview:true
+			}
 		);
 	}
 
@@ -375,15 +380,17 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 			FileItem	 
 	)
 	{
+		if(element instanceof DetailItem)
+		{
+			return [];
+		}
+
 		if(element instanceof FileItem)
 		{
 			const symbols =
 				await this.getSymbols(
 					element.uri
 				);
-
-			if(!symbols)
-				return [];
 
 			return this.flattenFunctions(
 				symbols
@@ -396,9 +403,8 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 					)
 			);
 		}
-		if(
-			element instanceof FunctionItem
-		)
+
+		if(element instanceof FunctionItem)
 		{
 			const start =
 				element.symbol.range.start.line + 1;
@@ -422,9 +428,7 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 			];
 		}
 
-		if(
-			element instanceof ClassItem
-		)
+		if(element instanceof ClassItem)
 		{
 			return element.symbol.children
 
@@ -437,11 +441,9 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 				);
 		}
 
-		if(this.scanWorkspace)
+		if(this.scanWorkspace) // Workspace Mode
 		{
-			if(
-				!vscode.workspace.workspaceFolders
-			)
+			if(!vscode.workspace.workspaceFolders)
 			{
 				vscode.window.showWarningMessage(
 					'No workspace folder open.'
@@ -451,8 +453,16 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 			}
 
 			const files =
-				await vscode.workspace.findFiles(
-					'**/*.{c,cpp,h,hpp,cc,cs,py,js,ts,tsx,jsx}'
+				(
+					await vscode.workspace.findFiles('**/*.{c,cpp,h,hpp,cc,cs,py,js,ts,tsx,jsx}')
+				)
+				.sort(
+					(a,b) =>
+						vscode.workspace
+							.asRelativePath(a)
+							.localeCompare(
+								vscode.workspace.asRelativePath(b)
+							)
 				);
 
 			if(this.view)
@@ -461,73 +471,68 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 					'Calculating workspace stats...';
 			}
 			
-			void this.updateWorkspaceStats(
-				files
-			);
+			await this.updateWorkspaceStats(files);
 
 			return files.map(
 				file =>
 					new FileItem(file)
 			);
 		}
-
-		const editor =
-			vscode.window.activeTextEditor;
-
-		if(!editor)
+		else // Active File Mode
 		{
-			vscode.window.showInformationMessage( 'No Active File Open.');
-			return [];
-		}
+			
+			const editor =
+				vscode.window.activeTextEditor;
 
-		const symbols =
-			await this.getSymbols(
-				editor.document.uri
-			);
-
-		if(!symbols)
-		{
-			return [];
-		}
-
-		const stats =
-			await this.getStats(
-				editor.document.uri
-			);
-
-		this.view!.message =
-			`${stats.count} funcs • ${stats.lines} lines`;
-
-		let results:
-		(
-			FunctionItem |
-			ClassItem
-		)[] = [];
-
-		for(const s of this.flattenFunctions(symbols))
-		{
-			if(
-				s.kind ===
-				vscode.SymbolKind.Class
-			)
+			if(!editor)
 			{
-				results.push(
-					new ClassItem(
-						s,
-						editor.document.uri
-					)
+				return [];
+			}
+
+			const symbols =
+				await this.getSymbols(
+					editor.document.uri
 				);
-			}
 
-			else if(
-				this.isFunction(s)
-			)
+			const stats =
+				await this.getStats(
+					editor.document.uri
+				);
+
+			this.view!.message =
+				`${stats.count} funcs • ${stats.lines} lines`;
+
+			let results:
+			(
+				FunctionItem |
+				ClassItem
+			)[] = [];
+
+			for(const s of this.flattenFunctions(symbols))
 			{
-				results.push( this.makeFunction(s, editor.document.uri));
-			}
-		}
+				if(
+					s.kind ===
+					vscode.SymbolKind.Class
+				)
+				{
+					results.push(
+						new ClassItem(
+							s,
+							editor.document.uri
+						)
+					);
+				}
 
-		return results;
+				else if(
+					this.isFunction(s)
+				)
+				{
+					results.push( this.makeFunction(s, editor.document.uri));
+				}
+			}
+
+			return results;
+		}
 	}
 }
 
@@ -536,12 +541,13 @@ export function activate(
         vscode.ExtensionContext
 )
 {
+
     const provider =
         new FunctionProvider();
 
     const tree =
     vscode.window.createTreeView(
-        'functionExplorer',
+        'functionInspectorSidebar',
         {
             treeDataProvider:provider,
 			canSelectMany:true,
@@ -578,6 +584,8 @@ export function activate(
 				);
 			}
 		),
+
+		//openFile
 		vscode.commands.registerCommand(
 			'functionInspector.openFile',
 			async (item:FileItem) =>
@@ -587,8 +595,9 @@ export function activate(
 			);
 		}),
 
+		// compareFunctions
 		vscode.commands.registerCommand(
-			'functionInspector.compareFunction',
+			'functionInspector.compareFunctions',
 			async () =>
 		{
 			const selected =
@@ -606,12 +615,17 @@ export function activate(
 				return;
 			}
 
-			provider.compare(
+			await provider.compare(
 				selected[0],
 				selected[1]
 			);
+
+			vscode.window.showInformationMessage(
+					`Comparing Functions`
+			);
 		}),
 
+		// selectFunction
 		vscode.commands.registerCommand(
 			'functionInspector.selectFunction',
 			async (
@@ -632,8 +646,14 @@ export function activate(
 				editor.revealRange(
 					item.symbol.range
 				);
+
+				vscode.window.showInformationMessage(
+					`Selected Function: ${item.symbol.name}`
+				);
 			}
 		),
+
+		// copyFunction
 		vscode.commands.registerCommand(
 			'functionInspector.copyFunction',
 			async (
@@ -652,9 +672,14 @@ export function activate(
 
 				await vscode.env.clipboard
 					.writeText(text);
+
+				vscode.window.showInformationMessage(
+					`Copied Function: ${item.symbol.name}`
+				);
 			}
 		),
 
+		// showFile
 		vscode.commands.registerCommand(
 			'functionInspector.showFile',
 			() =>
@@ -663,6 +688,7 @@ export function activate(
 			}
 		),
 
+		// showFolder
 		vscode.commands.registerCommand(
 			'functionInspector.showFolder',
 			() =>
@@ -671,6 +697,7 @@ export function activate(
 			}
 		),
 
+		// refresh
 		vscode.commands.registerCommand(
 			'functionInspector.refresh',
 			() =>
@@ -679,6 +706,7 @@ export function activate(
 			}
 		),
 
+		// showFunctions
         vscode.commands.registerCommand(
             'functionInspector.showFunctions',
             async () =>
@@ -686,11 +714,12 @@ export function activate(
                 provider.refresh();
 
                 await vscode.commands.executeCommand(
-                    'workbench.view.extension.functionInspectorSidebar'
+                    'workbench.view.extension.functionInspectorContainer'
                 );
             }
         ),
 
+		// jump
         vscode.commands.registerCommand(
             'functionInspector.jump',
             async (
