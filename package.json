@@ -1,5 +1,6 @@
 {
   "name": "function-inspector",
+  "publisher":"beSW3892",
   "displayName": "Function Inspector",
   "description": "Browse, inspect, compare, and navigate functions across your active file or workspace.",
   "version": "1.0.0",
@@ -25,7 +26,18 @@
 
   "contributes": {
       "menus": {
-        "view/item/context":[
+        "functionInspector.settings": [
+          {
+              "command": "functionInspector.toggleDetails"
+          },
+          {
+              "command": "functionInspector.toggleParameters"
+          },
+          {
+              "command": "functionInspector.togglePaths"
+          }
+        ],
+        "view/item/context": [
         {
             "command":"functionInspector.copyFunction",
             "when":"view == functionInspectorSidebar && viewItem == functionItem"
@@ -44,6 +56,11 @@
               "command":"functionInspector.refresh",
               "when":"view == functionInspectorSidebar",
               "group":"navigation"
+          },
+          {
+              "submenu": "functionInspector.settingsMenu",
+              "when": "view == functionInspectorSidebar",
+              "group": "navigation"
           }
         ],
         "commandPalette": [
@@ -57,6 +74,13 @@
           }
         ]
       },
+      "submenus": [
+          {
+              "id": "functionInspector.settingsMenu",
+              "label": "Function Inspector",
+              "icon": "$(list-selection)"
+          }
+      ],
       "commands": [
         {
           "command":"functionInspector.showFunctions",
@@ -68,6 +92,23 @@
           "icon":"$(refresh)"
         },
         {
+          "command": "functionInspector.settings",
+          "title": "Function Inspector: Settings",
+          "icon": "$(settings-gear)"
+        },
+        {
+          "command": "functionInspector.toggleDetails",
+          "title": "Expand Function Details"
+        },
+        {
+          "command": "functionInspector.toggleParameters",
+          "title": "Show Parameters"
+        },
+        {
+          "command": "functionInspector.togglePaths",
+          "title": "Show Paths"
+        },
+        {
           "command":"functionInspector.showFile",
           "title":"Function Inspector:Active File"
         },
@@ -76,8 +117,8 @@
           "title":"Function Inspector:Workspace"
         },
         {
-          "command":"functionInspector.copyFunction",
-          "title":"Copy Function"
+          "command":"functionInspector.copyFunctions",
+          "title":"Copy Functions"
         },
         {
           "command":"functionInspector.selectFunction",
