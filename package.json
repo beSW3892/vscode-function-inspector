@@ -1,164 +1,162 @@
 {
   "name": "function-inspector",
-  "publisher":"beSW3892",
+  "publisher": "beSW3892",
   "displayName": "Function Inspector",
   "description": "Browse, inspect, compare, and navigate functions across your active file or workspace.",
   "version": "1.0.0",
   "repository": {
-        "type": "git",
-        "url": "https://github.com/beSW3892/vscode-function-explorer.git"
+    "type": "git",
+    "url": "https://github.com/beSW3892/vscode-function-explorer.git"
   },
-
   "engines": {
     "vscode": "^1.120.0"
   },
-
   "categories": [
     "Other"
   ],
-
   "main": "./out/extension.js",
-
   "activationEvents": [
-      "onView:functionInspectorSidebar",
-      "onCommand:functionInspector.showFunctions"
+    "onView:functionInspectorSidebar",
+    "onCommand:functionInspector.showFunctions"
   ],
-
   "contributes": {
-      "menus": {
-        "functionInspector.settings": [
-          {
-              "command": "functionInspector.toggleDetails"
-          },
-          {
-              "command": "functionInspector.toggleParameters"
-          },
-          {
-              "command": "functionInspector.togglePaths"
-          }
-        ],
-        "view/item/context": [
-        {
-            "command":"functionInspector.copyFunction",
-            "when":"view == functionInspectorSidebar && viewItem == functionItem"
-        },
-        {
-            "command":"functionInspector.selectFunction",
-            "when":"view == functionInspectorSidebar && viewItem == functionItem"
-        },
-        {
-            "command":"functionInspector.compareFunctions",
-            "when":"view == functionInspectorSidebar && viewItem == functionItem"
-        }
-        ],
-        "view/title": [
-          {
-              "command":"functionInspector.refresh",
-              "when":"view == functionInspectorSidebar",
-              "group":"navigation"
-          },
-          {
-              "submenu": "functionInspector.settingsMenu",
-              "when": "view == functionInspectorSidebar",
-              "group": "navigation"
-          }
-        ],
-        "commandPalette": [
-          {
-              "command":"functionInspector.refresh",
-              "when":"false"
-          },
-          {
-              "command":"functionInspector.showFunctions",
-              "when":"false"
-          }
-        ]
-      },
-      "submenus": [
-          {
-              "id": "functionInspector.settingsMenu",
-              "label": "Function Inspector",
-              "icon": "$(list-selection)"
-          }
-      ],
-      "commands": [
-        {
-          "command":"functionInspector.showFunctions",
-          "title":"Function Inspector"
-        },
-        {
-          "command":"functionInspector.refresh",
-          "title":"Refresh",
-          "icon":"$(refresh)"
-        },
-        {
-          "command": "functionInspector.settings",
-          "title": "Function Inspector: Settings",
-          "icon": "$(settings-gear)"
-        },
+    "menus": {
+      "functionInspector.settingsMenu": [
         {
           "command": "functionInspector.toggleDetails",
-          "title": "Expand Function Details"
+          "group": "1_display"
         },
         {
           "command": "functionInspector.toggleParameters",
-          "title": "Show Parameters"
+          "group": "1_display"
         },
         {
           "command": "functionInspector.togglePaths",
-          "title": "Show Paths"
-        },
-        {
-          "command":"functionInspector.showFile",
-          "title":"Function Inspector:Active File"
-        },
-        {
-          "command":"functionInspector.showFolder",
-          "title":"Function Inspector:Workspace"
-        },
-        {
-          "command":"functionInspector.copyFunctions",
-          "title":"Copy Functions"
-        },
-        {
-          "command":"functionInspector.selectFunction",
-          "title":"Select Function"
-        },
-        {
-          "command":"functionInspector.compareFunctions",
-          "title":"Compare Functions"
+          "group": "1_display"
         }
       ],
- 
-     "viewsContainers": {
-       "activitybar": [
-         {
-           "id":"functionInspectorContainer",
-           "title":"Function Inspector",
-           "icon":"$(symbol-function)"
-         }
-       ]
-     },
- 
-     "views": {
-       "functionInspectorContainer": [
-         {
-           "id":"functionInspectorSidebar",
-           "name":"Function Inspector"
-         }
-       ]
-     }
+      "view/item/context": [
+        {
+          "command": "functionInspector.copyFunctions",
+          "when": "view == functionInspectorSidebar && viewItem == functionItem"
+        },
+        {
+          "command": "functionInspector.selectFunction",
+          "when": "view == functionInspectorSidebar && viewItem == functionItem"
+        },
+        {
+          "command": "functionInspector.compareFunctions",
+          "when": "view == functionInspectorSidebar && viewItem == functionItem"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "functionInspector.refresh",
+          "when": "view == functionInspectorSidebar",
+          "group": "navigation@1"
+        },
+        {
+          "submenu": "functionInspector.settingsMenu",
+          "when": "view == functionInspectorSidebar",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "functionInspector.refresh",
+          "when": "false"
+        },
+        {
+          "command": "functionInspector.showFunctions",
+          "when": "false"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "functionInspector.settingsMenu",
+        "label": "Function Inspector",
+        "icon": "$(list-selection)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "functionInspector.showFunctions",
+        "title": "Function Inspector"
+      },
+      {
+        "command": "functionInspector.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "functionInspector.settings",
+        "title": "Function Inspector: Settings",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "functionInspector.toggleDetails",
+        "title": "Show Function Details",
+        "toggled": "functionInspector.showDetails"
+      },
+      {
+        "command": "functionInspector.toggleParameters",
+        "title": "Show Parameters",
+        "toggled": "functionInspector.showParameters"
+      },
+      {
+        "command": "functionInspector.togglePaths",
+        "title": "Show Paths",
+        "toggled": "functionInspector.showPaths"
+      },
+      {
+        "command": "functionInspector.showFile",
+        "title": "Function Inspector:Active File"
+      },
+      {
+        "command": "functionInspector.showFolder",
+        "title": "Function Inspector:Workspace"
+      },
+      {
+        "command": "functionInspector.copyFunctions",
+        "title": "Copy Functions"
+      },
+      {
+        "command": "functionInspector.selectFunction",
+        "title": "Select Function"
+      },
+      {
+        "command": "functionInspector.compareFunctions",
+        "title": "Compare Functions"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "functionInspectorContainer",
+          "title": "Function Inspector",
+          "icon": "$(symbol-function)"
+        }
+      ]
+    },
+    "views": {
+      "functionInspectorContainer": [
+        {
+          "id": "functionInspectorSidebar",
+          "name": "Function Inspector"
+        }
+      ]
+    }
   },
-
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./"
   },
-
   "devDependencies": {
-    "@types/vscode": "^1.120.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@types/vscode": "^1.120.0",
     "typescript": "^5.9.3"
   }
 }

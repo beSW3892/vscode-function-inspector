@@ -1,6 +1,7 @@
+// DocumentSymbolAnalyzer.ts
 import * as vscode from 'vscode';
 import { FunctionAnalyzer } from './FunctionAnalyzer';
-import * as path from "path";
+
 
 export class DocumentSymbolAnalyzer
 implements FunctionAnalyzer

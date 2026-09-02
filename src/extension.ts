@@ -1,8 +1,8 @@
+// extension.ts
 import * as vscode from 'vscode';
 import { ProviderRegistry } from './providers/ProviderRegistry';
 import { DocumentSymbolAnalyzer } from './providers/DocumentSymbolAnalyzer';
 import { FunctionProvider } from './FunctionProvider';
-import { FunctionItem } from './FunctionItem';
 import { FileItem } from './FileItem';
 import { SymbolItem } from './SymbolItem';
 
@@ -11,6 +11,16 @@ export function activate(
         vscode.ExtensionContext
 )
 {
+	function isFunctionSymbol(
+		symbol: vscode.DocumentSymbol
+	): boolean
+	{
+		return (
+			symbol.kind === vscode.SymbolKind.Function ||
+			symbol.kind === vscode.SymbolKind.Method ||
+			symbol.kind === vscode.SymbolKind.Constructor
+		);
+	}
 
     const registry =
     new ProviderRegistry();
@@ -23,6 +33,24 @@ export function activate(
 		new FunctionProvider(
 			registry
 		);
+	
+	vscode.commands.executeCommand(
+		'setContext',
+		'functionInspector.showDetails',
+		true
+	);
+
+	vscode.commands.executeCommand(
+		'setContext',
+		'functionInspector.showParameters',
+		true
+	);
+
+	vscode.commands.executeCommand(
+		'setContext',
+		'functionInspector.showPaths',
+		true
+	);
 
     const tree =
     vscode.window.createTreeView(
@@ -75,38 +103,45 @@ export function activate(
 		vscode.commands.registerCommand( // compareFunctions
 			'functionInspector.compareFunctions',
 			async () =>
-		{
-			const selected =
-				tree.selection.filter(
-					i =>
-						i instanceof FunctionItem
-				);
-
-			if(selected.length !== 2)
 			{
-				vscode.window.showWarningMessage(
-					'Select exactly 2 functions.'
+				const selected =
+					tree.selection.filter(
+						(i): i is SymbolItem =>
+							i instanceof SymbolItem &&
+							isFunctionSymbol(i.symbol)
+					);
+
+				if(selected.length !== 2)
+				{
+					vscode.window.showWarningMessage(
+						'Select exactly 2 functions.'
+					);
+
+					return;
+				}
+
+				await provider.compare(
+					selected[0],
+					selected[1]
 				);
 
-				return;
+				vscode.window.showInformationMessage(
+					'Comparing Functions'
+				);
 			}
+		),
 
-			await provider.compare(
-				selected[0],
-				selected[1]
-			);
-
-			vscode.window.showInformationMessage(
-					`Comparing Functions`
-			);
-		}),
-
-		vscode.commands.registerCommand( // selectFunction
+		vscode.commands.registerCommand(
 			'functionInspector.selectFunction',
 			async (
-				item: FunctionItem
+				item: SymbolItem
 			) =>
 			{
+				if(!isFunctionSymbol(item.symbol))
+				{
+					return;
+				}
+
 				const editor =
 					await vscode.window.showTextDocument(
 						item.uri
@@ -134,10 +169,10 @@ export function activate(
 			{
 				const selected =
 					tree.selection.filter(
-						item =>
-							item instanceof SymbolItem &&
-							isFunctionSymbol(item.symbol)
-					);
+							(item): item is SymbolItem =>
+								item instanceof SymbolItem &&
+								isFunctionSymbol(item.symbol)
+						);
 
 				if(selected.length === 0)
 				{
@@ -215,50 +250,71 @@ export function activate(
             }
         ),
 
-        vscode.commands.registerCommand( // jump
-            'functionInspector.jump',
-            async (
-                item: FunctionItem
-            ) =>
-            {
-                const editor =
+        vscode.commands.registerCommand(
+			'functionInspector.jump',
+			async (
+				item: SymbolItem
+			) =>
+			{
+				const editor =
 					await vscode.window.showTextDocument(
 						item.uri
 					);
 
-                editor.selection =
-                    new vscode.Selection(
-                        item.symbol.selectionRange.start,
-                        item.symbol.selectionRange.start
-                    );
+				editor.selection =
+					new vscode.Selection(
+						item.symbol.selectionRange.start,
+						item.symbol.selectionRange.start
+					);
 
-                editor.revealRange(
-                    item.symbol.range
-                );
-            }
-        ),
+				editor.revealRange(
+					item.symbol.range
+				);
+			}
+		),
 
-		vscode.commands.registerCommand( // toggleDetails
+		vscode.commands.registerCommand(
 			'functionInspector.toggleDetails',
-			() =>
+			async () =>
 			{
-				provider.toggleDetails();
+				const enabled =
+					provider.toggleDetails();
+
+				await vscode.commands.executeCommand(
+					'setContext',
+					'functionInspector.showDetails',
+					enabled
+				);
 			}
 		),
 
 		vscode.commands.registerCommand( // toggleParameters
 			'functionInspector.toggleParameters',
-			() =>
+			async () =>
 			{
-				provider.toggleParameters();
+				const enabled =
+					provider.toggleParameters();
+
+				await vscode.commands.executeCommand(
+					'setContext',
+					'functionInspector.showParameters',
+					enabled
+				);
 			}
 		),
 
 		vscode.commands.registerCommand(
 			'functionInspector.togglePaths',
-			() =>
+			async () =>
 			{
-				provider.togglePaths();
+				const enabled =
+					provider.togglePaths();
+
+				await vscode.commands.executeCommand(
+					'setContext',
+					'functionInspector.showPaths',
+					enabled
+				);
 			}
 		),
     );

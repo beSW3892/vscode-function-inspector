@@ -1,3 +1,4 @@
+// ProviderRegistry.ts
 import * as vscode from 'vscode';
 
 import {

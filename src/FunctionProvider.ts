@@ -1,22 +1,30 @@
+// FunctionProvider.ts
 import * as vscode from 'vscode';
 
-import { FunctionItem } from './FunctionItem';
 import { DetailItem } from './DetailItem';
-import { ClassItem } from './ClassItem';
 import { FileItem } from './FileItem';
 import { ProviderRegistry } from './providers/ProviderRegistry';
-
+import { DisplayOptions } from './DisplayOptions';
+import { SymbolItem } from './SymbolItem';
+import {
+    FileStats,
+    WorkspaceStats
+}
+from './Stats';
 export class FunctionProvider
-implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileItem>
+implements vscode.TreeDataProvider<SymbolItem | DetailItem | FileItem>
 {
     private registry: ProviderRegistry;
 
     private refreshEmitter =
         new vscode.EventEmitter<void>();
 
-	private showDetails = true;
-    private showParameters = true;
-    private showPaths = true;
+	private displayOptions: DisplayOptions =
+	{
+		showDetails: true,
+		showParameters: true,
+		showPaths: true
+	};
 
     constructor(
         registry: ProviderRegistry
@@ -26,7 +34,7 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
     }
 
 	private scanWorkspace = false;
-	private statsCache = new Map<string, {count:number, lines:number}>();
+	private statsCache = new Map<string, FileStats>();
 
 	private view?:vscode.TreeView<any>;
 
@@ -36,58 +44,61 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
     	new Map<string,vscode.DocumentSymbol[]>();
 
 	private collectStats(
-		symbols:vscode.DocumentSymbol[]
-	)
+		symbols: vscode.DocumentSymbol[]
+	): FileStats
 	{
-		let count = 0;
+		let functions = 0;
 		let lines = 0;
 
-		const walk = (
-			items:vscode.DocumentSymbol[]
+		const walk =
+		(
+			items: vscode.DocumentSymbol[]
 		) =>
 		{
-			for(const s of items)
+			for(const symbol of items)
 			{
-				if(this.isFunction(s))
+				if(this.isFunction(symbol))
 				{
-					count++;
+					functions++;
 
 					lines +=
-						s.range.end.line -
-						s.range.start.line + 1;
+						symbol.range.end.line -
+						symbol.range.start.line +
+						1;
 				}
 
 				walk(
-					s.children ?? []
+					symbol.children ?? []
 				);
 			}
 		};
 
 		walk(symbols);
 
-		return {count, lines};
+		return {
+			functions,
+			lines
+		};
 	}
 
-	private flattenFunctions(
-		symbols:vscode.DocumentSymbol[]
+	private flattenSymbols(
+		symbols: vscode.DocumentSymbol[]
 	)
 	{
-		let results:
+		const results:
 			vscode.DocumentSymbol[] = [];
 
-		const walk = (
-			items:vscode.DocumentSymbol[]
+		const walk =
+		(
+			items: vscode.DocumentSymbol[]
 		) =>
 		{
-			for(const s of items)
+			for(const symbol of items)
 			{
-				if(this.isFunction(s))
-				{
-					results.push(s);
-				}
+				results.push(symbol);
 
 				walk(
-					s.children ?? []
+					symbol.children ?? []
 				);
 			}
 		};
@@ -98,13 +109,13 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 	}
 
 	private async updateWorkspaceStats(
-		files:vscode.Uri[]
-	)
+		files: vscode.Uri[]
+	): Promise<void>
 	{
-		let totalFuncs = 0;
+		let totalFunctions = 0;
 		let totalLines = 0;
 
-		const allStats =
+		const stats =
 			await Promise.all(
 				files.map(
 					file =>
@@ -112,38 +123,65 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 				)
 			);
 
-		for(const stats of allStats)
+		for(const fileStats of stats)
 		{
-			totalFuncs += stats.count;
-			totalLines += stats.lines;
+			totalFunctions +=
+				fileStats.functions;
+
+			totalLines +=
+				fileStats.lines;
 		}
 
 		if(this.view)
 		{
 			this.view.message =
-    			`${files.length} files • ${totalFuncs} funcs • ${totalLines} lines`;
+				`${files.length} files • ` +
+				`${totalFunctions} functions • ` +
+				`${totalLines} function lines`;
 		}
 	}
 
-	private makeFunction(
-		symbol:vscode.DocumentSymbol,
-		uri:vscode.Uri
+	private makeSymbol(
+		symbol: vscode.DocumentSymbol,
+		uri: vscode.Uri
 	)
 	{
-		return new FunctionItem(
+		return new SymbolItem(
 			symbol,
 			uri,
-			this.showDetails
+			this.displayOptions
 		);
 	}
 
 	private isFunction(
-    	s:vscode.DocumentSymbol
-	)
+		symbol: vscode.DocumentSymbol
+	): boolean
 	{
 		return (
-			s.kind === vscode.SymbolKind.Function ||
-			s.kind === vscode.SymbolKind.Method
+			symbol.kind === vscode.SymbolKind.Function ||
+			symbol.kind === vscode.SymbolKind.Method ||
+			symbol.kind === vscode.SymbolKind.Constructor
+		);
+	}
+
+	private isContainer(
+		symbol: vscode.DocumentSymbol
+	): boolean
+	{
+		return (
+			symbol.kind === vscode.SymbolKind.Class ||
+			symbol.kind === vscode.SymbolKind.Struct ||
+			symbol.kind === vscode.SymbolKind.Namespace
+		);
+	}
+
+	private isDisplayableSymbol(
+		symbol: vscode.DocumentSymbol
+	): boolean
+	{
+		return (
+			this.isFunction(symbol) ||
+			this.isContainer(symbol)
 		);
 	}
 
@@ -253,44 +291,57 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 		this.refreshEmitter.fire();
 	}
 
-    toggleDetails()
-    {
-        this.showDetails =
-            !this.showDetails;
+    toggleDetails(): boolean
+	{
+		this.displayOptions.showDetails =
+			!this.displayOptions.showDetails;
 
-        this.refresh();
-    }
+		this.refresh();
+
+		return this.displayOptions.showDetails;
+	}
     
-    toggleParameters()
-    {
-        this.showParameters =
-            !this.showParameters;
+    toggleParameters(): boolean
+	{
+		this.displayOptions.showParameters =
+			!this.displayOptions.showParameters;
 
-        this.refresh();
-    }
+		this.refresh();
 
-    togglePaths()
-    {
-        this.showPaths =
-            !this.showPaths;
+		return this.displayOptions.showParameters;
+	}
 
-        this.refresh();
-    }
+	togglePaths(): boolean
+	{
+		this.displayOptions.showPaths =
+			!this.displayOptions.showPaths;
+
+		this.refresh();
+
+		return this.displayOptions.showPaths;
+	}
+
+	private sortSymbols(
+		symbols: vscode.DocumentSymbol[]
+	): vscode.DocumentSymbol[]
+	{
+		return [...symbols].sort(
+			(a, b) =>
+				a.range.start.line -
+				b.range.start.line
+		);
+	}
 
     getTreeItem(
-		item:
-			FunctionItem |
-			DetailItem   |
-			ClassItem	 |
-			FileItem
-	)
+	    item: SymbolItem | DetailItem | FileItem
+	): vscode.TreeItem
 	{
 		return item;
 	}
 
 	async compare(
-		a:FunctionItem,
-		b:FunctionItem
+		a:SymbolItem,
+		b:SymbolItem
 	)
 	{
 		const docA =
@@ -336,17 +387,18 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 
 	async getChildren(
 		element?:
-			FunctionItem |
-			DetailItem	 |
-			ClassItem	 |
-			FileItem	 
+			| SymbolItem
+			| DetailItem
+			| FileItem
 	)
 	{
+		// Detail rows never have children
 		if(element instanceof DetailItem)
 		{
 			return [];
 		}
 
+		// File → top-level symbols
 		if(element instanceof FileItem)
 		{
 			const symbols =
@@ -354,135 +406,127 @@ implements vscode.TreeDataProvider<FunctionItem | DetailItem | ClassItem | FileI
 					element.uri
 				);
 
-			return this.flattenFunctions(
-				symbols
+			return this.sortSymbols(symbols)
+				.filter(
+					symbol =>
+						this.isDisplayableSymbol(symbol)
+				)
+				.map(
+					symbol =>
+						this.makeSymbol(
+							symbol,
+							element.uri
+						)
+				);
+		}
+
+		// Symbol → child symbols + optional details
+		if(element instanceof SymbolItem)
+		{
+			const children:
+				(SymbolItem | DetailItem)[] =
+				[];
+
+			if(
+				this.displayOptions.showDetails &&
+				this.isFunction(element.symbol)
 			)
-			.map(
-				s =>
-					this.makeFunction(
-						s,
+			{
+				const start =
+					element.symbol.range.start.line + 1;
+
+				const end =
+					element.symbol.range.end.line + 1;
+
+				children.push(
+					new DetailItem(
+						`Lines: ${end - start + 1}`
+					)
+				);
+
+				children.push(
+					new DetailItem(
+						`Range: ${start}-${end}`
+					)
+				);
+			}
+
+			for(
+				const child of element.symbol.children
+			)
+			{
+				if(
+					!this.isDisplayableSymbol(child)
+				)
+				{
+					continue;
+				}
+
+				children.push(
+					this.makeSymbol(
+						child,
 						element.uri
+					)
+				);
+			}
+
+			return children;
+		}
+
+		// ROOT
+		if(this.scanWorkspace)
+		{
+			const files =
+				await vscode.workspace.findFiles(
+					this.getWorkspacePattern()
+				);
+
+			files.sort(
+				(a, b) =>
+					vscode.workspace
+						.asRelativePath(a)
+						.localeCompare(
+							vscode.workspace.asRelativePath(b)
+						)
+			);
+
+			void this.updateWorkspaceStats(
+				files
+			);
+
+			return files.map(
+				file =>
+					new FileItem(
+						file,
+						this.displayOptions.showPaths
 					)
 			);
 		}
 
-		if(element instanceof FunctionItem)
+		const editor =
+			vscode.window.activeTextEditor;
+
+		if(!editor)
 		{
-			if (!this.showDetails)
-            {
-                return [];
-            }
-
-            const start =
-                element.symbol.range.start.line + 1;
-
-            const end =
-                element.symbol.range.end.line + 1;
-
-            const lineCount =
-                end - start + 1;
-
-            return [
-                new DetailItem(`Lines: ${lineCount}`),
-                new DetailItem(`Range: ${start}-${end}`)
-            ];
+			return [];
 		}
 
-		if(element instanceof ClassItem)
-		{
-			return element.symbol.children
-
-				.filter(
-					s => this.isFunction(s)
-				)
-
-				.map(
-					s => this.makeFunction(s, element.uri!)
-				);
-		}
-
-		if(this.scanWorkspace) // Workspace Mode
-		{
-			if(!vscode.workspace.workspaceFolders)
-			{
-				vscode.window.showWarningMessage(
-					'No workspace folder open.'
-				);
-
-				return [];
-			}
-            const files =
-                await vscode.workspace.findFiles(
-                    this.getWorkspacePattern()
-                );
-
-			if(this.view)
-			{
-				this.view.message =
-					'Calculating workspace stats...';
-			}
-			
-			//await this.updateWorkspaceStats(files);
-
-			return files.map(
-				file =>
-					new FileItem(file)
+		const symbols =
+			await this.getSymbols(
+				editor.document.uri
 			);
-		}
-		else // Active File Mode
-		{
-			
-			const editor =
-				vscode.window.activeTextEditor;
 
-			if(!editor)
-			{
-				return [];
-			}
-
-			const symbols =
-				await this.getSymbols(
-					editor.document.uri
-				);
-
-			const stats =
-				await this.getStats(
-					editor.document.uri
-				);
-
-			this.view!.message =
-				`${stats.count} funcs • ${stats.lines} lines`;
-
-			let results:
-			(
-				FunctionItem |
-				ClassItem
-			)[] = [];
-
-			for(const s of this.flattenFunctions(symbols))
-			{
-				if(
-					s.kind ===
-					vscode.SymbolKind.Class
-				)
-				{
-					results.push(
-						new ClassItem(
-							s,
-							editor.document.uri
-						)
-					);
-				}
-
-				else if(
-					this.isFunction(s)
-				)
-				{
-					results.push( this.makeFunction(s, editor.document.uri));
-				}
-			}
-
-			return results;
-		}
+		return this.sortSymbols(symbols)
+			.filter(
+				symbol =>
+					this.isDisplayableSymbol(symbol)
+			)
+			.map(
+				symbol =>
+					this.makeSymbol(
+						symbol,
+						editor.document.uri
+					)
+			);
 	}
 }

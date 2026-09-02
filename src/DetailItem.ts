@@ -1,15 +1,18 @@
 import * as vscode from 'vscode';
 
-export class DetailItem
-extends vscode.TreeItem
+export class DetailItem extends vscode.TreeItem
 {
     constructor(
-        label:string
+        text: string
     )
     {
         super(
-            label,
+            text,
             vscode.TreeItemCollapsibleState.None
         );
+
+        this.contextValue = "detailItem";
+        this.command = undefined;
+        this.iconPath = undefined;
     }
 }

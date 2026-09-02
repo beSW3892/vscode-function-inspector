@@ -1,27 +1,32 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 export class FileItem
 extends vscode.TreeItem
 {
     constructor(
-        readonly uri:vscode.Uri
+        readonly uri: vscode.Uri,
+        showPath: boolean
     )
     {
         super(
-            vscode.workspace.asRelativePath(uri),
+            showPath
+                ? vscode.workspace.asRelativePath(uri)
+                : path.basename(uri.fsPath),
             vscode.TreeItemCollapsibleState.Collapsed
         );
 
-        this.resourceUri = uri;
-        this.iconPath = vscode.ThemeIcon.File;
-
         this.contextValue =
             "fileItem";
-        
-        this.command = {
-            command:'functionInspector.openFile',
-            title:'Open File',
-            arguments:[this]
+
+        this.iconPath =
+            vscode.ThemeIcon.File;
+
+        this.command =
+        {
+            command: "functionInspector.openFile",
+            title: "Open File",
+            arguments: [this]
         };
     }
 }
