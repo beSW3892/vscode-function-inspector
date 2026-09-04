@@ -19,8 +19,9 @@ extends vscode.TreeItem
         this.contextValue =
             "fileItem";
 
-        this.iconPath =
-            vscode.ThemeIcon.File;
+        this.resourceUri = uri;
+
+        this.iconPath = new vscode.ThemeIcon('file');
 
         this.command =
         {

@@ -24,15 +24,19 @@
       "functionInspector.settingsMenu": [
         {
           "command": "functionInspector.toggleDetails",
-          "group": "1_display"
+          "group": "1_display@1",
+          "when": "true",
+          "toggled": "functionInspector.showDetails"
         },
         {
           "command": "functionInspector.toggleParameters",
-          "group": "1_display"
+          "group": "1_display@2",
+          "toggled": "functionInspector.showParameters"
         },
         {
           "command": "functionInspector.togglePaths",
-          "group": "1_display"
+          "group": "1_display@3",
+          "toggled": "functionInspector.showPaths"
         }
       ],
       "view/item/context": [
@@ -96,18 +100,15 @@
       },
       {
         "command": "functionInspector.toggleDetails",
-        "title": "Show Function Details",
-        "toggled": "functionInspector.showDetails"
+        "title": "Show Function Details"
       },
       {
         "command": "functionInspector.toggleParameters",
-        "title": "Show Parameters",
-        "toggled": "functionInspector.showParameters"
+        "title": "Show Parameters"
       },
       {
         "command": "functionInspector.togglePaths",
-        "title": "Show Paths",
-        "toggled": "functionInspector.showPaths"
+        "title": "Show Paths"
       },
       {
         "command": "functionInspector.showFile",

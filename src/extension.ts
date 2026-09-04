@@ -6,7 +6,7 @@ import { FunctionProvider } from './FunctionProvider';
 import { FileItem } from './FileItem';
 import { SymbolItem } from './SymbolItem';
 
-export function activate(
+export async function activate(
     context:
         vscode.ExtensionContext
 )
@@ -34,23 +34,23 @@ export function activate(
 			registry
 		);
 	
-	vscode.commands.executeCommand(
-		'setContext',
-		'functionInspector.showDetails',
-		true
-	);
+	await vscode.commands.executeCommand(
+        'setContext',
+        'functionInspector.showDetails',
+        true
+    );
 
-	vscode.commands.executeCommand(
-		'setContext',
-		'functionInspector.showParameters',
-		true
-	);
+    await vscode.commands.executeCommand(
+        'setContext',
+        'functionInspector.showParameters',
+        true
+    );
 
-	vscode.commands.executeCommand(
-		'setContext',
-		'functionInspector.showPaths',
-		true
-	);
+    await vscode.commands.executeCommand(
+        'setContext',
+        'functionInspector.showPaths',
+        true
+    );
 
     const tree =
     vscode.window.createTreeView(
@@ -78,6 +78,7 @@ export function activate(
 				provider.clearCache(
 					e.document.uri
 				);
+				provider.refresh();
 			}
 		),
 
