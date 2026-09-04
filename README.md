@@ -2,9 +2,7 @@
 
 A lightweight VS Code extension for exploring functions, methods, and classes across your active file or entire workspace.
 
-Browse code structure, inspect function statistics, jump to implementations, compare functions, and copy source code directly from the sidebar.
-
----
+Function Inspector provides a tree-based view of your code structure with support for function statistics, source navigation, multi-selection, copying, comparison, and customizable display options.
 
 # Features
 
@@ -16,7 +14,7 @@ Command:
 Function Inspector: Active File
 ```
 
-Shows symbols from the currently open editor.
+Shows symbols from the currently opened file editor.
 
 Displays:
 
@@ -31,8 +29,6 @@ Includes:
 * Line counts
 * Range information
 * Collapse / Expand tree support
-
----
 
 ## Workspace Mode
 
@@ -54,8 +50,6 @@ Features:
 
 Clicking a file node opens the editor.
 
----
-
 ## Sidebar Controls
 
 ### Refresh button
@@ -76,19 +70,28 @@ Useful when:
 * extensions reload
 * parser output changes
 
----
-
 ### Collapse All
 
 Use the built-in **Collapse All** button in the tree view toolbar.
 
 Quickly collapse the entire explorer tree.
 
----
+### Display Settings
+
+Available options include:
+
+Toggle Function Details
+    - Shows Number of lines and range
+Toggle Parameters
+    - Shows function name (dependent on symbol provider)
+Toggle Paths
+    - Shows only file name
+
+These settings allow the tree to be customized depending on how much information you want displayed.
 
 ## Function Actions
 
-Available from function nodes.
+Available from nodes in the Function Inspector view
 
 ### Select Function
 
@@ -96,115 +99,29 @@ Opens the source file and selects the full function body.
 
 ### Copy Function
 
-Copies the full function source to the clipboard.
+Copies the full function source to the clipboard. Multiple functions can be selected and copied at once.
 
 ### Compare Functions
 
-Select **two functions**.
-
-Run:
-
-```txt
-Function Inspector: Compare Functions
-```
-
-Opens a VS Code diff view comparing both implementations.
-
----
+Select two functions and right click to select compare functions.
 
 # Command Palette Commands
 
 Only these commands appear directly in the Command Palette:
 
 | Command                               |
-| ------------------------------------- |
+| - |
 | Function Inspector: Active File       |
 | Function Inspector: Workspace         |
-| ------------------------------------- |
+| - |
 
 Other actions are available through the explorer UI.
 
----
-
 # Language Support
 
-Function Inspector relies on:
+Symbol discovery is therefore handled by the language provider extensions rather than by a custom parser built into Function Inspector.
 
-```ts
-vscode.executeDocumentSymbolProvider
-```
-
-Language support depends on installed symbol providers.
-
-## Supported File Discovery
-
-```txt
-.c
-.cpp
-.cc
-.h
-.hpp
-.cs
-.py
-.js
-.ts
-.jsx
-.tsx
-```
-
----
-
-## Required Extensions
-
-### JavaScript / TypeScript
-
-Built into VS Code.
-
-No installation required.
-
----
-
-### Python
-
-Install:
-
-```txt
-Python (Microsoft)
-```
-
-Recommended:
-
-```txt
-Pylance (Microsoft)
-```
-
----
-
-### C / C++
-
-Install:
-
-```txt
-C/C++ (Microsoft)
-```
-
----
-
-### C#
-
-Install ONE of:
-
-```txt
-C# Dev Kit (Microsoft)
-```
-
-or
-
-```txt
-C# (OmniSharp)
-```
-
----
+This allows Function Inspector to work with any language that provides compatible document symbols.
 
 Without these extensions:
 
@@ -212,7 +129,6 @@ Without these extensions:
 * workspace results may be empty
 * nested symbols may be missing
 
----
 ## Caching
 
 Function Inspector caches:
@@ -241,7 +157,7 @@ Results vary by:
 * extension version
 * parser implementation
 
----
+
 ## Large Workspaces
 
 Very large workspaces may experience slower scans.
@@ -267,7 +183,7 @@ Local functions and nested methods depend on the language provider.
 
 Some languages may omit nested symbols.
 
----
+
 
 # Release Notes
 
@@ -286,3 +202,17 @@ Features:
 * Function selection
 * File opening
 * Tree navigation
+
+## 1.6.0
+
+Updated for the love of the game
+
+Features:
+
+* Multiple function copying
+* Customizable display settings
+* Updated stats
+    - Function parameters display
+    - Function path display
+    - Function detail display
+* Expanded symbol support across a wider range of languages

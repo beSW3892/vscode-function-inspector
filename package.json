@@ -3,7 +3,7 @@
   "publisher": "beSW3892",
   "displayName": "Function Inspector",
   "description": "Browse, inspect, compare, and navigate functions across your active file or workspace.",
-  "version": "1.0.0",
+  "version": "1.6.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/beSW3892/vscode-function-explorer.git"
@@ -25,7 +25,6 @@
         {
           "command": "functionInspector.toggleDetails",
           "group": "1_display@1",
-          "when": "true",
           "toggled": "functionInspector.showDetails"
         },
         {
@@ -100,15 +99,15 @@
       },
       {
         "command": "functionInspector.toggleDetails",
-        "title": "Show Function Details"
+        "title": "Toggle Function Details"
       },
       {
         "command": "functionInspector.toggleParameters",
-        "title": "Show Parameters"
+        "title": "Toggle Parameters"
       },
       {
         "command": "functionInspector.togglePaths",
-        "title": "Show Paths"
+        "title": "Toggle Paths"
       },
       {
         "command": "functionInspector.showFile",
